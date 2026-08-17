@@ -14,7 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      jobs: {
+        Row: {
+          applied: boolean | null
+          applied_at: string | null
+          closing_date: string | null
+          collected_at: string | null
+          company: string | null
+          cover_letter_text: string | null
+          description: string | null
+          id: string
+          location: string | null
+          match_score: number | null
+          matched_requirements: string[] | null
+          missing_requirements: string[] | null
+          recommended: boolean | null
+          salary: string | null
+          source: string | null
+          tailored_cv_markdown: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          applied?: boolean | null
+          applied_at?: string | null
+          closing_date?: string | null
+          collected_at?: string | null
+          company?: string | null
+          cover_letter_text?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          match_score?: number | null
+          matched_requirements?: string[] | null
+          missing_requirements?: string[] | null
+          recommended?: boolean | null
+          salary?: string | null
+          source?: string | null
+          tailored_cv_markdown?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          applied?: boolean | null
+          applied_at?: string | null
+          closing_date?: string | null
+          collected_at?: string | null
+          company?: string | null
+          cover_letter_text?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          match_score?: number | null
+          matched_requirements?: string[] | null
+          missing_requirements?: string[] | null
+          recommended?: boolean | null
+          salary?: string | null
+          source?: string | null
+          tailored_cv_markdown?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
