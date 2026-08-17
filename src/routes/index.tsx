@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, RefreshCw } from "lucide-react";
@@ -97,9 +97,8 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
           </thead>
           <tbody>
             {rows.map((job) => (
-              <>
+              <Fragment key={job.id}>
                 <tr
-                  key={job.id}
                   onClick={() => setOpenId((id) => (id === job.id ? null : job.id))}
                   className="cursor-pointer border-t hover:bg-muted/40"
                 >
@@ -115,13 +114,13 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
                   <td className="px-3 py-2 text-muted-foreground">{job.applied ? "Yes" : "No"}</td>
                 </tr>
                 {openId === job.id && (
-                  <tr key={`${job.id}-detail`} className="border-t bg-muted/20">
+                  <tr className="border-t bg-muted/20">
                     <td colSpan={5} className="p-3">
                       <JobCard job={job} defaultOpen />
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
             {!rows.length && (
               <tr className="border-t">
