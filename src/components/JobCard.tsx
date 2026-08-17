@@ -108,6 +108,16 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const queueApply = useMutation({
+    mutationFn: () => requestApply(job.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Queued — the local assistant will open this application shortly");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const hasDocs = Boolean(job.tailored_cv_markdown);
   const slug = slugify(`${job.title}-${job.company ?? ""}`) || "job";
 
