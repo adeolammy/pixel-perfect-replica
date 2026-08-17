@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           applied: boolean | null
           applied_at: string | null
+          apply_requested: boolean
+          apply_requested_at: string | null
           closing_date: string | null
           collected_at: string | null
           company: string | null
@@ -38,6 +40,8 @@ export type Database = {
         Insert: {
           applied?: boolean | null
           applied_at?: string | null
+          apply_requested?: boolean
+          apply_requested_at?: string | null
           closing_date?: string | null
           collected_at?: string | null
           company?: string | null
@@ -58,6 +62,8 @@ export type Database = {
         Update: {
           applied?: boolean | null
           applied_at?: string | null
+          apply_requested?: boolean
+          apply_requested_at?: string | null
           closing_date?: string | null
           collected_at?: string | null
           company?: string | null
