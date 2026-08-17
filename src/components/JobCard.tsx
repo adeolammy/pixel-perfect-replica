@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink, Check, FileText, Download } from "lucide-react";
+import { ChevronDown, ExternalLink, Check, FileText, Download, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { downloadText, markApplied, scoreTone, slugify, type Job } from "@/lib/jobs";
+import { downloadText, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
+
 
 export function ScorePill({ score }: { score: number | null }) {
   const tone = scoreTone(score);
