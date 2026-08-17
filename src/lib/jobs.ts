@@ -19,6 +19,8 @@ export type Job = {
   cover_letter_text: string | null;
   applied: boolean | null;
   applied_at: string | null;
+  apply_requested: boolean | null;
+  apply_requested_at: string | null;
 };
 
 export const jobsQuery = {
@@ -40,6 +42,15 @@ export async function markApplied(id: string) {
     .eq("id", id);
   if (error) throw error;
 }
+
+export async function requestApply(id: string) {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ apply_requested: true, apply_requested_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 
 export function scoreTone(score: number | null): "high" | "mid" | "low" {
   const s = score ?? 0;

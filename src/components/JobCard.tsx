@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink, Check, FileText, Download } from "lucide-react";
+import { ChevronDown, ExternalLink, Check, FileText, Download, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { downloadText, markApplied, scoreTone, slugify, type Job } from "@/lib/jobs";
+import { downloadText, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
+
 
 export function ScorePill({ score }: { score: number | null }) {
   const tone = scoreTone(score);
@@ -107,6 +108,16 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const queueApply = useMutation({
+    mutationFn: () => requestApply(job.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Queued — the local assistant will open this application shortly");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const hasDocs = Boolean(job.tailored_cv_markdown);
   const slug = slugify(`${job.title}-${job.company ?? ""}`) || "job";
 
@@ -199,6 +210,16 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
               <Check className="size-3.5" />
               {job.applied ? "Applied" : "Mark as Applied"}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={Boolean(job.applied) || Boolean(job.apply_requested) || queueApply.isPending}
+              onClick={() => queueApply.mutate()}
+            >
+              <Send className="size-3.5" />
+              {job.apply_requested ? "Queued" : "Apply Now"}
+            </Button>
+
           </div>
         </div>
       )}

@@ -10,33 +10,58 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicGetPendingJobsRouteImport } from './routes/api/public/get-pending-jobs'
+import { Route as ApiPublicMarkJobAppliedRouteImport } from './routes/api/public/mark-job-applied'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGetPendingJobsRoute = ApiPublicGetPendingJobsRouteImport.update({
+  id: '/api/public/get-pending-jobs',
+  path: '/api/public/get-pending-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMarkJobAppliedRoute = ApiPublicMarkJobAppliedRouteImport.update({
+  id: '/api/public/mark-job-applied',
+  path: '/api/public/mark-job-applied',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/get-pending-jobs': typeof ApiPublicGetPendingJobsRoute
+  '/api/public/mark-job-applied': typeof ApiPublicMarkJobAppliedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/get-pending-jobs': typeof ApiPublicGetPendingJobsRoute
+  '/api/public/mark-job-applied': typeof ApiPublicMarkJobAppliedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/get-pending-jobs': typeof ApiPublicGetPendingJobsRoute
+  '/api/public/mark-job-applied': typeof ApiPublicMarkJobAppliedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/api/public/get-pending-jobs' | '/api/public/mark-job-applied'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/get-pending-jobs' | '/api/public/mark-job-applied'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/get-pending-jobs'
+    | '/api/public/mark-job-applied'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicGetPendingJobsRoute: typeof ApiPublicGetPendingJobsRoute
+  ApiPublicMarkJobAppliedRoute: typeof ApiPublicMarkJobAppliedRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +73,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/get-pending-jobs': {
+      id: '/api/public/get-pending-jobs'
+      path: '/api/public/get-pending-jobs'
+      fullPath: '/api/public/get-pending-jobs'
+      preLoaderRoute: typeof ApiPublicGetPendingJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mark-job-applied': {
+      id: '/api/public/mark-job-applied'
+      path: '/api/public/mark-job-applied'
+      fullPath: '/api/public/mark-job-applied'
+      preLoaderRoute: typeof ApiPublicMarkJobAppliedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicGetPendingJobsRoute: ApiPublicGetPendingJobsRoute,
+  ApiPublicMarkJobAppliedRoute: ApiPublicMarkJobAppliedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
