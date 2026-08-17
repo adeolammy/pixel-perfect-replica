@@ -210,6 +210,16 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
               <Check className="size-3.5" />
               {job.applied ? "Applied" : "Mark as Applied"}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={Boolean(job.applied) || Boolean(job.apply_requested) || queueApply.isPending}
+              onClick={() => queueApply.mutate()}
+            >
+              <Send className="size-3.5" />
+              {job.apply_requested ? "Queued" : "Apply Now"}
+            </Button>
+
           </div>
         </div>
       )}
