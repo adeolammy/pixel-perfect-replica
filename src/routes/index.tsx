@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobCard, ScoreDot } from "@/components/JobCard";
+import { LocalBridgeToolbar } from "@/components/LocalBridgeToolbar";
 import { jobsQuery, type Job } from "@/lib/jobs";
 import { cn } from "@/lib/utils";
 
