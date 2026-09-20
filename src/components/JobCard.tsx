@@ -169,7 +169,13 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
         {job.applied ? (
           <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">Applied</span>
         ) : null}
-        <ScorePill score={job.match_score} />
+        {isManual(job) ? (
+          <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+            Manually added
+          </span>
+        ) : (
+          <ScorePill score={job.match_score} />
+        )}
       </button>
 
       {open && (
