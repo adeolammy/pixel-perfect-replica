@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink, Check, FileText, Download, Send } from "lucide-react";
+import { ChevronDown, ExternalLink, Check, FileText, Download, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { downloadText, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
+import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
 
 
 export function ScorePill({ score }: { score: number | null }) {
@@ -117,6 +128,21 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const remove = useMutation({
+    mutationFn: () => deleteJob(job.id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["jobs"] });
+      const previous = queryClient.getQueryData<Job[]>(["jobs"]);
+      queryClient.setQueryData<Job[]>(["jobs"], (old) => (old ?? []).filter((j) => j.id !== job.id));
+      return { previous };
+    },
+    onError: (e: Error, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(["jobs"], ctx.previous);
+      toast.error(e.message);
+    },
+    onSuccess: () => toast.success("Job deleted"),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
+  });
 
   const hasDocs = Boolean(job.tailored_cv_markdown);
   const slug = slugify(`${job.title}-${job.company ?? ""}`) || "job";
@@ -143,7 +169,13 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
         {job.applied ? (
           <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">Applied</span>
         ) : null}
-        <ScorePill score={job.match_score} />
+        {isManual(job) ? (
+          <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+            Manually added
+          </span>
+        ) : (
+          <ScorePill score={job.match_score} />
+        )}
       </button>
 
       {open && (
@@ -220,6 +252,33 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
               {job.apply_requested ? "Queued" : "Apply Now"}
             </Button>
 
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={remove.isPending}
+                  className="ml-auto text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+                  <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => remove.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}

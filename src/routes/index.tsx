@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobCard, ScoreDot } from "@/components/JobCard";
+import { LocalBridgeToolbar } from "@/components/LocalBridgeToolbar";
 import { jobsQuery, type Job } from "@/lib/jobs";
 import { cn } from "@/lib/utils";
 
@@ -170,7 +171,8 @@ function Dashboard() {
             <TabsTrigger value="all">All Jobs</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4">
+          <TabsContent value="overview" className="mt-4 space-y-4">
+            <LocalBridgeToolbar />
             <div className="grid gap-3 sm:grid-cols-3">
               <Stat label="Total Jobs" value={jobs.length} />
               <Stat label="Recommended" value={recommended.length} />
