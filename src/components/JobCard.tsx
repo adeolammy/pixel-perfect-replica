@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink, Check, FileText, Download, Send } from "lucide-react";
+import { ChevronDown, ExternalLink, Check, FileText, Download, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { downloadText, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
+import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
 
 
 export function ScorePill({ score }: { score: number | null }) {
