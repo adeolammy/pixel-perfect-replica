@@ -128,6 +128,21 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const remove = useMutation({
+    mutationFn: () => deleteJob(job.id),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["jobs"] });
+      const previous = queryClient.getQueryData<Job[]>(["jobs"]);
+      queryClient.setQueryData<Job[]>(["jobs"], (old) => (old ?? []).filter((j) => j.id !== job.id));
+      return { previous };
+    },
+    onError: (e: Error, _vars, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(["jobs"], ctx.previous);
+      toast.error(e.message);
+    },
+    onSuccess: () => toast.success("Job deleted"),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
+  });
 
   const hasDocs = Boolean(job.tailored_cv_markdown);
   const slug = slugify(`${job.title}-${job.company ?? ""}`) || "job";
