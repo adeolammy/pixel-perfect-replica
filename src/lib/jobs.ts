@@ -52,6 +52,62 @@ export async function requestApply(id: string) {
 }
 
 
+export async function deleteJob(id: string) {
+  const { error } = await supabase.from("jobs").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export type NewJob = {
+  url: string;
+  title: string;
+  company: string;
+  location: string;
+  description: string;
+};
+
+export async function addManualJob(job: NewJob) {
+  const { error } = await supabase.from("jobs").insert({
+    source: "Manual",
+    title: job.title,
+    company: job.company || null,
+    location: job.location || null,
+    url: job.url,
+    description: job.description,
+    salary: null,
+    closing_date: null,
+    match_score: null,
+    matched_requirements: [],
+    missing_requirements: [],
+    recommended: true,
+    applied: false,
+    apply_requested: false,
+  });
+  if (error) {
+    if (error.code === "23505") throw new Error("This job is already in your list.");
+    throw error;
+  }
+}
+
+export const BRIDGE_URL = "http://localhost:8765";
+export const BRIDGE_OFFLINE_MESSAGE =
+  "Local assistant isn't running. Start 4_Start_Local_Bridge.bat on your computer first.";
+
+export type BridgeResponse = { started: boolean; reason?: string };
+
+export async function callBridge(path: string): Promise<BridgeResponse> {
+  const res = await fetch(`${BRIDGE_URL}${path}`, { method: "POST" });
+  return (await res.json()) as BridgeResponse;
+}
+
+export async function bridgeStatus(): Promise<{ running: boolean; task?: string }> {
+  const res = await fetch(`${BRIDGE_URL}/status`);
+  return (await res.json()) as { running: boolean; task?: string };
+}
+
+export function isManual(job: Job) {
+  return job.source === "Manual" && job.match_score === null;
+}
+
 export function scoreTone(score: number | null): "high" | "mid" | "low" {
   const s = score ?? 0;
   if (s >= 70) return "high";
