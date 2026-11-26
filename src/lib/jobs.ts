@@ -26,6 +26,7 @@ export type Job = {
 export const jobsQuery = {
   queryKey: ["jobs"],
   queryFn: async (): Promise<Job[]> => {
+    await cleanupStaleJobs();
     const { data, error } = await supabase
       .from("jobs")
       .select("*")
@@ -131,4 +132,38 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 60);
+}
+
+
+export const STALE_AFTER_DAYS = 21;
+
+/** Deletes un-applied jobs added more than 3 weeks ago. Applied jobs are kept (manual delete only). */
+export async function cleanupStaleJobs() {
+  const cutoff = new Date(Date.now() - STALE_AFTER_DAYS * 86_400_000).toISOString();
+  const { error } = await supabase
+    .from("jobs")
+    .delete()
+    .lt("collected_at", cutoff)
+    .eq("applied", false);
+  if (error) console.warn("Stale job cleanup failed", error);
+}
+
+export function daysSince(iso: string | null, now = Date.now()): number | null {
+  if (!iso) return null;
+  return Math.floor((now - new Date(iso).getTime()) / 86_400_000);
+}
+
+export type AgeLevel = "fresh" | "aging" | "expiring";
+export function ageLevel(days: number): AgeLevel {
+  if (days >= 15) return "expiring";
+  if (days >= 7) return "aging";
+  return "fresh";
+}
+
+export function formatAdded(iso: string | null): string {
+  const d = daysSince(iso);
+  if (d === null || !iso) return "Unknown";
+  const date = new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const rel = d <= 0 ? "today" : d === 1 ? "1 day ago" : `${d} days ago`;
+  return `${date} (${rel})`;
 }

@@ -6,7 +6,7 @@ import { ArrowUpDown, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { JobCard, ScoreDot } from "@/components/JobCard";
+import { AgeBadge, JobCard, ScoreDot } from "@/components/JobCard";
 import { LocalBridgeToolbar } from "@/components/LocalBridgeToolbar";
 import { jobsQuery, type Job } from "@/lib/jobs";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-type SortKey = "title" | "company" | "source" | "match_score" | "applied";
+type SortKey = "title" | "company" | "source" | "match_score" | "collected_at" | "applied";
 
 function AllJobsTable({ jobs }: { jobs: Job[] }) {
   const [filter, setFilter] = useState("");
@@ -93,6 +93,7 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
               {header("company", "Company")}
               {header("source", "Source")}
               {header("match_score", "Score")}
+              {header("collected_at", "Date added")}
               {header("applied", "Applied")}
             </tr>
           </thead>
@@ -112,11 +113,14 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
                       {job.match_score ?? 0}
                     </span>
                   </td>
+                  <td className="px-3 py-2">
+                    <AgeBadge collectedAt={job.collected_at} applied={!!job.applied} />
+                  </td>
                   <td className="px-3 py-2 text-muted-foreground">{job.applied ? "Yes" : "No"}</td>
                 </tr>
                 {openId === job.id && (
                   <tr className="border-t bg-muted/20">
-                    <td colSpan={5} className="p-3">
+                    <td colSpan={6} className="p-3">
                       <JobCard job={job} defaultOpen />
                     </td>
                   </tr>
@@ -125,7 +129,7 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
             ))}
             {!rows.length && (
               <tr className="border-t">
-                <td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">
                   No jobs match this filter.
                 </td>
               </tr>

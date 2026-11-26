@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job } from "@/lib/jobs";
+import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job, daysSince, ageLevel, formatAdded, STALE_AFTER_DAYS } from "@/lib/jobs";
 
 
 export function ScorePill({ score }: { score: number | null }) {
@@ -165,6 +165,9 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {[job.source, job.location, job.salary].filter(Boolean).join(" · ") || "No details"}
           </p>
+          <div className="mt-1">
+            <AgeBadge collectedAt={job.collected_at} applied={!!job.applied} />
+          </div>
         </div>
         {job.applied ? (
           <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">Applied</span>
@@ -283,5 +286,25 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
         </div>
       )}
     </article>
+  );
+}
+
+
+export function AgeBadge({ collectedAt, applied }: { collectedAt: string | null; applied: boolean }) {
+  const days = daysSince(collectedAt);
+  if (days === null) return null;
+  const level = ageLevel(days);
+  const left = Math.max(0, STALE_AFTER_DAYS - days);
+  const tone =
+    level === "expiring"
+      ? "border-destructive/40 bg-destructive/10 text-destructive"
+      : level === "aging"
+        ? "border-warning/40 bg-warning/10 text-warning"
+        : "border-success/40 bg-success/10 text-success";
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]", tone)}>
+      Added {formatAdded(collectedAt)}
+      {!applied && level === "expiring" ? ` · removed in ${left}d` : null}
+    </span>
   );
 }
