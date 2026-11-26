@@ -94,7 +94,7 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
               {header("source", "Source")}
               {header("match_score", "Score")}
               {header("collected_at", "Date added")}
-              {header("applied", "Applied")}
+              {header("applied", "Status")}
             </tr>
           </thead>
           <tbody>
@@ -116,7 +116,13 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
                   <td className="px-3 py-2">
                     <AgeBadge collectedAt={job.collected_at} applied={!!job.applied} />
                   </td>
-                  <td className="px-3 py-2 text-muted-foreground">{job.applied ? "Yes" : "No"}</td>
+                  <td className="px-3 py-2">
+                    {job.applied ? (
+                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">Applied</span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">Open</span>
+                    )}
+                  </td>
                 </tr>
                 {openId === job.id && (
                   <tr className="border-t bg-muted/20">
@@ -144,8 +150,10 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
 function Dashboard() {
   const { data: jobs = [], isLoading, isError, error, refetch, isFetching } = useQuery(jobsQuery);
 
-  const recommended = jobs.filter((j) => j.recommended);
-  const applied = jobs.filter((j) => j.applied);
+  const recommended = jobs.filter((j) => j.recommended && !j.applied);
+  const applied = jobs
+    .filter((j) => j.applied)
+    .sort((a, b) => (b.applied_at ?? "").localeCompare(a.applied_at ?? ""));
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -171,7 +179,8 @@ function Dashboard() {
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="recommended">Recommended</TabsTrigger>
+            <TabsTrigger value="recommended">Recommended ({recommended.length})</TabsTrigger>
+            <TabsTrigger value="applied">Applied ({applied.length})</TabsTrigger>
             <TabsTrigger value="all">All Jobs</TabsTrigger>
           </TabsList>
 
@@ -194,6 +203,14 @@ function Dashboard() {
               recommended.map((job) => <JobCard key={job.id} job={job} />)
             ) : (
               <p className="text-sm text-muted-foreground">No recommended jobs yet.</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="applied" className="mt-4 space-y-3">
+            {applied.length ? (
+              applied.map((job) => <JobCard key={job.id} job={job} />)
+            ) : (
+              <p className="text-sm text-muted-foreground">No applied jobs yet. Jobs you mark as applied will appear here.</p>
             )}
           </TabsContent>
 
