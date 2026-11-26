@@ -1,0 +1,11 @@
+DROP POLICY IF EXISTS "Anyone can delete jobs" ON public.jobs;
+DROP POLICY IF EXISTS "Anyone can read jobs" ON public.jobs;
+DROP POLICY IF EXISTS "Anyone can update jobs" ON public.jobs;
+DROP POLICY IF EXISTS "Anyone can insert jobs" ON public.jobs;
+REVOKE ALL ON public.jobs FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.jobs TO authenticated;
+GRANT ALL ON public.jobs TO service_role;
+CREATE POLICY "Signed-in users can read jobs" ON public.jobs FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Signed-in users can insert jobs" ON public.jobs FOR INSERT TO authenticated WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Signed-in users can update jobs" ON public.jobs FOR UPDATE TO authenticated USING (auth.uid() IS NOT NULL) WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Signed-in users can delete jobs" ON public.jobs FOR DELETE TO authenticated USING (auth.uid() IS NOT NULL);

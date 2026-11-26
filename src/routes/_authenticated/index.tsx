@@ -1,7 +1,8 @@
 import { Fragment, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, RefreshCw } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowUpDown, LogOut, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { LocalBridgeToolbar } from "@/components/LocalBridgeToolbar";
 import { jobsQuery, type Job } from "@/lib/jobs";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Glasgow Job Dashboard — Data Analyst & Housing Roles" },
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/")({
         content:
           "Review scored job matches, tailored CVs and cover letters, and track which roles you've applied to.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,
@@ -147,6 +150,25 @@ function AllJobsTable({ jobs }: { jobs: Job[] }) {
   );
 }
 
+function SignOutButton() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={async () => {
+        await queryClient.cancelQueries();
+        queryClient.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/auth", replace: true });
+      }}
+    >
+      <LogOut className="size-3.5" /> Sign out
+    </Button>
+  );
+}
+
 function Dashboard() {
   const { data: jobs = [], isLoading, isError, error, refetch, isFetching } = useQuery(jobsQuery);
 
@@ -164,9 +186,12 @@ function Dashboard() {
             Data Analyst &amp; Housing roles · Glasgow
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} /> Refresh
+          </Button>
+          <SignOutButton />
+        </div>
       </header>
 
       {isError ? (
