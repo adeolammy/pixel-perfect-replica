@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job, daysSince, ageLevel, formatAdded, STALE_AFTER_DAYS } from "@/lib/jobs";
+import { deleteJob, downloadText, isManual, markApplied, requestApply, scoreTone, slugify, type Job, daysSince, ageLevel, formatAdded, STALE_AFTER_DAYS, daysUntilClosing, closingLevel, closingLabel } from "@/lib/jobs";
 
 
 export function ScorePill({ score }: { score: number | null }) {
@@ -25,12 +25,13 @@ export function ScorePill({ score }: { score: number | null }) {
   return (
     <span
       className={cn(
-        "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums",
-        tone === "high" && "bg-success text-success-foreground",
-        tone === "mid" && "bg-warning text-warning-foreground",
-        tone === "low" && "bg-muted text-muted-foreground",
+        "inline-flex shrink-0 items-center gap-1.5 rounded border px-1.5 py-0.5 font-mono text-xs tabular-nums",
+        tone === "high" && "border-success/40 text-success",
+        tone === "mid" && "border-warning/40 text-warning",
+        tone === "low" && "border-border text-muted-foreground",
       )}
     >
+      <ScoreDot score={score} />
       {score ?? 0}
     </span>
   );
@@ -59,10 +60,10 @@ function Chips({ items, tone }: { items: string[] | null; tone: "match" | "miss"
         <span
           key={item}
           className={cn(
-            "rounded-md border px-2 py-0.5 text-xs",
+            "rounded border px-1.5 py-0.5 text-[11px]",
             tone === "match"
-              ? "border-success/30 bg-success/10 text-success"
-              : "border-destructive/25 bg-destructive/5 text-muted-foreground",
+              ? "border-success/30 text-success"
+              : "border-border text-muted-foreground",
           )}
         >
           {item}
@@ -83,7 +84,7 @@ function DocBlock({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border border-border/60 bg-background/40">
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <button
           type="button"
@@ -98,7 +99,7 @@ function DocBlock({
         </Button>
       </div>
       {open && (
-        <pre className="max-h-96 overflow-auto whitespace-pre-wrap border-t bg-muted/40 px-3 py-3 text-xs leading-relaxed">
+        <pre className="max-h-96 overflow-auto whitespace-pre-wrap border-t border-border/60 px-3 py-3 font-mono text-xs leading-relaxed">
           {text}
         </pre>
       )}
@@ -148,7 +149,7 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
   const slug = slugify(`${job.title}-${job.company ?? ""}`) || "job";
 
   return (
-    <article className="rounded-lg border bg-card">
+    <article className="rounded-lg border border-border/60 bg-card transition-colors hover:border-border">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -165,15 +166,16 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
           <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {[job.source, job.location, job.salary].filter(Boolean).join(" · ") || "No details"}
           </p>
-          <div className="mt-1">
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <ClosingBadge closingDate={job.closing_date} />
             <AgeBadge collectedAt={job.collected_at} applied={!!job.applied} />
           </div>
         </div>
         {job.applied ? (
-          <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">Applied</span>
+          <span className="shrink-0 rounded border border-success/40 px-1.5 py-0.5 font-mono text-xs text-success">Applied</span>
         ) : null}
         {isManual(job) ? (
-          <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+          <span className="shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
             Manually added
           </span>
         ) : (
@@ -182,17 +184,17 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
       </button>
 
       {open && (
-        <div className="space-y-4 border-t px-4 py-4">
+        <div className="space-y-4 border-t border-border/60 px-4 py-4">
           {job.matched_requirements?.length ? (
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Matched requirements</p>
+              <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Matched requirements</p>
               <Chips items={job.matched_requirements} tone="match" />
             </div>
           ) : null}
 
           {job.missing_requirements?.length ? (
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Missing requirements</p>
+              <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Missing requirements</p>
               <Chips items={job.missing_requirements} tone="miss" />
             </div>
           ) : null}
@@ -205,7 +207,7 @@ export function JobCard({ job, defaultOpen = false }: { job: Job; defaultOpen?: 
 
           {hasDocs ? (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-success">✅ Documents ready</p>
+              <p className="font-mono text-xs text-success">● Documents ready</p>
               <DocBlock
                 label="Tailored CV"
                 text={job.tailored_cv_markdown!}
@@ -297,14 +299,33 @@ export function AgeBadge({ collectedAt, applied }: { collectedAt: string | null;
   const left = Math.max(0, STALE_AFTER_DAYS - days);
   const tone =
     level === "expiring"
-      ? "border-destructive/40 bg-destructive/10 text-destructive"
+      ? "border-destructive/40 text-destructive"
       : level === "aging"
-        ? "border-warning/40 bg-warning/10 text-warning"
-        : "border-success/40 bg-success/10 text-success";
+        ? "border-warning/40 text-warning"
+        : "border-border text-muted-foreground";
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]", tone)}>
+    <span className={cn("inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px]", tone)}>
       Added {formatAdded(collectedAt)}
       {!applied && level === "expiring" ? ` · removed in ${left}d` : null}
+    </span>
+  );
+}
+
+export function ClosingBadge({ closingDate }: { closingDate: string | null }) {
+  const days = daysUntilClosing(closingDate);
+  if (days === null || !closingDate) return null;
+  const level = closingLevel(days);
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[11px]",
+        level === "urgent" && "border-destructive/50 bg-destructive/10 text-destructive",
+        level === "soon" && "border-warning/50 text-warning",
+        level === "later" && "border-border text-foreground/80",
+        level === "passed" && "border-border text-muted-foreground line-through",
+      )}
+    >
+      {closingLabel(closingDate, days)}
     </span>
   );
 }

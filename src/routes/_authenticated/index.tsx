@@ -89,7 +89,7 @@ function SourceRibbon({
   );
 }
 
-type SortKey = "title" | "company" | "source" | "match_score" | "collected_at" | "applied";
+type SortKey = "title" | "company" | "source" | "match_score" | "collected_at" | "closing_date" | "applied";
 
 function AllJobsTable({ jobs, filter }: { jobs: Job[]; filter: string }) {
   const [sort, setSort] = useState<{ key: SortKey; asc: boolean }>({ key: "match_score", asc: false });
@@ -101,6 +101,7 @@ function AllJobsTable({ jobs, filter }: { jobs: Job[]; filter: string }) {
       !q ? true : [j.title, j.company, j.source, j.location].some((v) => v?.toLowerCase().includes(q)),
     );
     return [...filtered].sort((a, b) => {
+      if (sort.key === "closing_date" && !a.closing_date !== !b.closing_date) return a.closing_date ? -1 : 1;
       const av = a[sort.key] ?? "";
       const bv = b[sort.key] ?? "";
       const cmp =
@@ -134,6 +135,7 @@ function AllJobsTable({ jobs, filter }: { jobs: Job[]; filter: string }) {
               {header("company", "Company")}
               {header("source", "Source")}
               {header("match_score", "Score")}
+              {header("closing_date", "Closes")}
               {header("collected_at", "Added")}
               {header("applied", "Status")}
             </tr>
@@ -155,6 +157,9 @@ function AllJobsTable({ jobs, filter }: { jobs: Job[]; filter: string }) {
                   </span>
                 </td>
                 <td className="px-3 py-2.5">
+                  {job.closing_date ? <ClosingBadge closingDate={job.closing_date} /> : <span className="text-muted-foreground">—</span>}
+                </td>
+                <td className="px-3 py-2.5">
                   <AgeBadge collectedAt={job.collected_at} applied={!!job.applied} />
                 </td>
                 <td className="px-3 py-2.5">
@@ -170,7 +175,7 @@ function AllJobsTable({ jobs, filter }: { jobs: Job[]; filter: string }) {
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={6} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={7} className="px-3 py-10 text-center text-sm text-muted-foreground">
                   No jobs match this filter.
                 </td>
               </tr>

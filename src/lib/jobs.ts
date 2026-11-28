@@ -64,6 +64,7 @@ export type NewJob = {
   company: string;
   location: string;
   description: string;
+  closing_date: string;
 };
 
 export async function addManualJob(job: NewJob) {
@@ -75,7 +76,7 @@ export async function addManualJob(job: NewJob) {
     url: job.url,
     description: job.description,
     salary: null,
-    closing_date: null,
+    closing_date: job.closing_date || null,
     match_score: null,
     matched_requirements: [],
     missing_requirements: [],
@@ -166,4 +167,33 @@ export function formatAdded(iso: string | null): string {
   const date = new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   const rel = d <= 0 ? "today" : d === 1 ? "1 day ago" : `${d} days ago`;
   return `${date} (${rel})`;
+}
+
+
+export type ClosingLevel = "passed" | "urgent" | "soon" | "later";
+
+/** Whole days from today (local) until a YYYY-MM-DD closing date. */
+export function daysUntilClosing(date: string | null, now = new Date()): number | null {
+  if (!date) return null;
+  const [y, m, d] = date.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const close = new Date(y, m - 1, d).getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.round((close - today) / 86_400_000);
+}
+
+export function closingLevel(days: number): ClosingLevel {
+  if (days < 0) return "passed";
+  if (days < 3) return "urgent";
+  if (days <= 7) return "soon";
+  return "later";
+}
+
+export function closingLabel(date: string, days: number): string {
+  if (days < 0) return "Deadline passed";
+  if (days === 0) return "Closes today";
+  if (days === 1) return "Closes tomorrow";
+  if (days <= 7) return `Closes in ${days}d`;
+  const [y, m, d] = date.split("-").map(Number);
+  return `Closes ${new Date(y, m - 1, d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
 }

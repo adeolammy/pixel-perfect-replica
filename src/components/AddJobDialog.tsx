@@ -20,7 +20,7 @@ import { addManualJob, callBridge } from "@/lib/jobs";
 export function AddJobDialog({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ url: "", title: "", company: "", location: "", description: "" });
+  const [form, setForm] = useState({ url: "", title: "", company: "", location: "", description: "", closing_date: "" });
   const queryClient = useQueryClient();
 
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) =>
@@ -33,7 +33,7 @@ export function AddJobDialog({ trigger }: { trigger: ReactNode }) {
       await addManualJob(form);
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       setOpen(false);
-      setForm({ url: "", title: "", company: "", location: "", description: "" });
+      setForm({ url: "", title: "", company: "", location: "", description: "", closing_date: "" });
       try {
         await callBridge("/generate-docs");
         toast.success("Job added — generating your CV and cover letter now, check back in a moment.");
@@ -74,6 +74,10 @@ export function AddJobDialog({ trigger }: { trigger: ReactNode }) {
               <Label htmlFor="job-location">Location</Label>
               <Input id="job-location" value={form.location} onChange={set("location")} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="job-closing">Closing date (optional)</Label>
+            <Input id="job-closing" type="date" value={form.closing_date} onChange={set("closing_date")} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="job-description">Description</Label>
